@@ -29,7 +29,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee read(String id) {
-        LOG.debug("Creating employee with id [{}]", id);
+        LOG.debug("Getting employee with id [{}]", id);
 
         Employee employee = employeeRepository.findByEmployeeId(id);
 
@@ -38,6 +38,34 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         return employee;
+    }
+
+    /**
+     * Gets the number of reports given an employee ID.
+     * Complexity O(log(n) * n)
+     *
+     * @param id - employee ID
+     * @return the number of reports for the given
+     */
+    @Override
+    public int getNumberOfReports(String id) {
+        LOG.debug("Getting employee reporting structure with id [{}]", id);
+        int numberOfReports = 0;
+        // O(log(n)) if database is indexed by the employee ID
+        Employee employee = employeeRepository.findByEmployeeId(id);
+
+        if (employee == null) {
+            throw new RuntimeException("Invalid employeeId: " + id);
+        }
+        if (employee.getDirectReports() != null) {
+            // O(n) calls once for every report under a single employee
+            for (Employee directReport : employee.getDirectReports()) {
+                numberOfReports++;
+                numberOfReports += getNumberOfReports(directReport.getEmployeeId());
+            }
+        }
+
+        return numberOfReports;
     }
 
     @Override
